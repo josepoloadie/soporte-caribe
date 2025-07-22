@@ -1,7 +1,5 @@
-// NuestroClientes.jsx
-
-// Muestra una lista de logotipos de clientes con nombre. Están centrados y animados al hacer hover.
 import { motion } from "framer-motion";
+
 function NuestrosClientes() {
   const clientes = [
     { nombre: "Soporte SA", logo: "/logos/SoporteSA.webp" },
@@ -10,34 +8,33 @@ function NuestrosClientes() {
   ];
 
   return (
-    <section className="py-16 px-4 bg-white text-center" id="clientes">
-      <h2 className="text-3xl font-bold text-[#004A97] mb-12">
-        Nuestros Clientes
-      </h2>
+    <section
+      id="clientes"
+      className="py-20 px-6 bg-gray-100 text-[var(--color-tertiary)]"
+    >
+      <div className="max-w-6xl mx-auto text-center">
+        <h2 className="text-3xl md:text-4xl font-bold mb-12 text-[var(--color-primary)]">
+          Nuestros Clientes
+        </h2>
 
-      <div className="flex flex-wrap justify-center gap-20">
-        {clientes.map((cliente, index) => (
-          <motion.div
-            key={index}
-            className="flex flex-col items-center"
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: index * 0.1 }}
-            viewport={{ once: true }}
-          >
-            <div className="transition-transform md:hover:scale-125">
+        <div className="grid md:grid-cols-3 gap-8">
+          {clientes.map((cliente, index) => (
+            <motion.div
+              key={index}
+              className="bg-quaternary rounded-2xl overflow-hidden h-32 shadow-md hover:shadow-xl transition-shadow duration-300 flex flex-col items-center justify-center p-4 group"
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              viewport={{ once: true }}
+            >
               <img
                 src={cliente.logo}
                 alt={cliente.nombre}
-                className="bg-primary/40 p-4 rounded-lg h-20 mb-2 object-contain"
+                className="h-24 md:h-28 object-contain mb-4 transition-transform duration-300 group-hover:scale-105"
               />
-
-              <p className="text-sm font-semibold text-[#3C3C3B] text-center">
-                {cliente.nombre}
-              </p>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );

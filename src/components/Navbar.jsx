@@ -18,7 +18,9 @@ const Navbar = () => {
   return (
     <nav
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrolled ? "bg-[var(--color-primary)] shadow-md" : "bg-transparent"
+        scrolled
+          ? "bg-[var(--color-primary)] shadow-md"
+          : "bg-[var(--color-primary)] md:bg-transparent"
       }`}
     >
       <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
@@ -60,28 +62,30 @@ const Navbar = () => {
 
       {/* Menú móvil */}
       {menuOpen && (
-        <ul className="md:hidden bg-[var(--color-primary)] px-6 pb-4 text-white space-y-4 text-base">
-          <li>
-            <a href="#inicio" onClick={toggleMenu}>
-              Inicio
-            </a>
-          </li>
-          <li>
-            <a href="#servicios" onClick={toggleMenu}>
-              Servicios
-            </a>
-          </li>
-          <li>
-            <a href="#nosotros" onClick={toggleMenu}>
-              Nosotros
-            </a>
-          </li>
-          <li>
-            <a href="#contacto" onClick={toggleMenu}>
-              Contacto
-            </a>
-          </li>
-        </ul>
+        <div className="md:hidden absolute top-full left-0 w-full bg-[var(--color-primary)] text-white py-6 px-6 z-40 shadow-lg">
+          <ul className="space-y-4 text-base">
+            <li>
+              <a href="#inicio" onClick={toggleMenu}>
+                Inicio
+              </a>
+            </li>
+            <li>
+              <a href="#servicios" onClick={toggleMenu}>
+                Servicios
+              </a>
+            </li>
+            <li>
+              <a href="#nosotros" onClick={toggleMenu}>
+                Nosotros
+              </a>
+            </li>
+            <li>
+              <a href="#contacto" onClick={toggleMenu}>
+                Contacto
+              </a>
+            </li>
+          </ul>
+        </div>
       )}
     </nav>
   );

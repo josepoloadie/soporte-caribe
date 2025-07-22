@@ -33,7 +33,7 @@ function App() {
 
       {/* Botón flotante de WhatsApp (enlace directo al chat) */}
       <a
-        href="https://wa.me/573001112233" // ← Cambia este número por el de tu empresa (formato internacional sin espacios)
+        href="https://wa.me/+573184870315" // ← Cambia este número por el de tu empresa (formato internacional sin espacios)
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 bg-green-500 text-white p-3 rounded-full shadow-lg hover:bg-green-600 transition duration-300 z-50"

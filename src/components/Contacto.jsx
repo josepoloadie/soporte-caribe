@@ -1,4 +1,5 @@
 // src/components/Contacto.jsx
+import { FiMail, FiPhone, FiMapPin } from "react-icons/fi";
 
 const Contacto = () => {
   return (
@@ -15,47 +16,68 @@ const Contacto = () => {
         {/* Contenedor con formulario + info de contacto */}
         <div className="grid md:grid-cols-2 gap-12">
           {/* 📝 Formulario de contacto */}
-          <form className="space-y-6">
-            {/* Campo: Nombre */}
+          <form
+            action="https://formsubmit.co/informacion@soportecaribe.com"
+            method="POST"
+            className="space-y-6"
+          >
+            {/* Opcional: desactiva captcha y define redirección */}
+            <input type="hidden" name="_captcha" value="false" />
+            <input
+              type="hidden"
+              name="_next"
+              value="https://soporte-caribe.vercel.app/"
+            />
+
+            {/* Nombre */}
             <div>
-              <label className="block mb-2 font-medium" htmlFor="nombre">
+              <label
+                htmlFor="nombre"
+                className="block mb-2 font-medium text-[var(--color-tertiary)]"
+              >
                 Nombre
               </label>
               <input
                 type="text"
                 id="nombre"
                 name="nombre"
-                className="w-full p-3 border rounded-lg border-[var(--color-neutral)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)]"
                 placeholder="Tu nombre"
+                className="w-full p-3 border border-[var(--color-neutral)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition"
               />
             </div>
 
-            {/* Campo: Correo electrónico */}
+            {/* Correo electrónico */}
             <div>
-              <label className="block mb-2 font-medium" htmlFor="correo">
+              <label
+                htmlFor="correo"
+                className="block mb-2 font-medium text-[var(--color-tertiary)]"
+              >
                 Correo electrónico
               </label>
               <input
                 type="email"
                 id="correo"
                 name="correo"
-                className="w-full p-3 border rounded-lg border-[var(--color-neutral)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)]"
                 placeholder="tunombre@correo.com"
+                className="w-full p-3 border border-[var(--color-neutral)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition"
               />
             </div>
 
-            {/* Campo: Mensaje */}
+            {/* Mensaje */}
             <div>
-              <label className="block mb-2 font-medium" htmlFor="mensaje">
+              <label
+                htmlFor="mensaje"
+                className="block mb-2 font-medium text-[var(--color-tertiary)]"
+              >
                 Mensaje
               </label>
               <textarea
                 id="mensaje"
                 name="mensaje"
                 rows="4"
-                className="w-full p-3 border rounded-lg border-[var(--color-neutral)] focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)]"
                 placeholder="Escribe tu mensaje aquí..."
-              ></textarea>
+                className="w-full p-3 border border-[var(--color-neutral)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition"
+              />
             </div>
 
             {/* Botón de enviar */}
@@ -67,25 +89,45 @@ const Contacto = () => {
             </button>
           </form>
 
-          {/* 📍 Información de contacto */}
-          <div className="flex flex-col justify-center space-y-6">
-            <div>
-              <h3 className="text-xl font-semibold text-[var(--color-secondary)] mb-1">
-                Correo
-              </h3>
-              <p>soporte@soportecaribe.com</p>
+          <div className="flex flex-col space-y-6 text-[var(--color-tertiary)]">
+            {/* Correo */}
+            <div className="flex items-start gap-3">
+              <FiMail className="text-[var(--color-secondary)] mt-1" />
+              <div>
+                <h3 className="text-xl font-semibold text-[var(--color-secondary)] mb-1">
+                  Correo
+                </h3>
+                <a
+                  href="mailto:informacion@soportecaribe.com"
+                  className="hover:underline"
+                >
+                  informacion@soportecaribe.com
+                </a>
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl font-semibold text-[var(--color-secondary)] mb-1">
-                Teléfono
-              </h3>
-              <p>+57 301 234 5678</p>
+
+            {/* Teléfono */}
+            <div className="flex items-start gap-3">
+              <FiPhone className="text-[var(--color-secondary)] mt-1" />
+              <div>
+                <h3 className="text-xl font-semibold text-[var(--color-secondary)] mb-1">
+                  Teléfono
+                </h3>
+                <a href="tel:+573184870315" className="hover:underline">
+                  +57 318 487 0315
+                </a>
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl font-semibold text-[var(--color-secondary)] mb-1">
-                Ubicación
-              </h3>
-              <p>Barranquilla, Colombia</p>
+
+            {/* Ubicación */}
+            <div className="flex items-start gap-3">
+              <FiMapPin className="text-[var(--color-secondary)] mt-1" />
+              <div>
+                <h3 className="text-xl font-semibold text-[var(--color-secondary)] mb-1">
+                  Ubicación
+                </h3>
+                <p>Barranquilla, Colombia</p>
+              </div>
             </div>
           </div>
         </div>
