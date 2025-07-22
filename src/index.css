@@ -1,0 +1,19 @@
+/* Importamos las utilidades base de Tailwind CSS */
+@import "tailwindcss";
+
+/* 🎨 Tokens personalizados de diseño mediante directiva @theme (si estás usando una herramienta que lo soporte) */
+@theme {
+  --color-primary: #004a97; /* Azul oscuro - color principal de la marca */
+  --color-secondary: #0084cb; /* Azul claro - color secundario */
+  --color-tertiary: #1d1d1b; /* Negro profundo - textos y detalles */
+  --color-quaternary: #3c3c3b; /* Gris oscuro */
+  --color-neutral: #878787; /* Gris neutro para elementos secundarios */
+
+  /* Tipografía base utilizada en toda la web */
+  --font-base: ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Comportamiento suave para el scroll al hacer clic en anclas internas (#id) */
+html {
+  scroll-behavior: smooth;
+}
