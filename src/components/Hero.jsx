@@ -9,7 +9,7 @@ const Hero = () => {
       className="min-h-screen flex flex-col justify-center items-center text-center bg-[var(--color-primary)] text-white px-4 py-20"
     >
       <img
-        src="./public/logos/SoporteCaribe.png"
+        src="public/logos/SoporteCaribe.png"
         alt={"Logo Soporte Caribe"}
         className="w-full max-w-4xl mx-auto h-auto block"
         loading="lazy"
