@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 function NuestrosClientes() {
   const clientes = [
-    { nombre: "Soporte SA", logo: "/logos/SoporteSA.webp" },
+    { nombre: "Soporte SA", logo: "/logos/SoporteSA.png" },
     { nombre: "Cabot Colombiana", logo: "/logos/Cabot.png" },
     { nombre: "Vygon Colombia", logo: "/logos/VygonColombia.png" },
   ];
@@ -21,7 +21,7 @@ function NuestrosClientes() {
           {clientes.map((cliente, index) => (
             <motion.div
               key={index}
-              className="bg-quaternary rounded-2xl overflow-hidden h-32 shadow-md hover:shadow-xl transition-shadow duration-300 flex flex-col items-center justify-center p-4 group"
+              className="rounded-2xl overflow-hidden h-32 shadow-md hover:shadow-xl transition-shadow duration-300 flex flex-col items-center justify-center p-4 group"
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
