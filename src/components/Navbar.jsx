@@ -24,7 +24,17 @@ const Navbar = () => {
       }`}
     >
       <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-        <h1 className="text-white font-bold text-xl">Soporte Caribe</h1>
+        <a href="#inicio">
+          <img
+            src="/logos/LetrasSoporteCaribeBlancas.png"
+            alt="Soporte Caribe Logo"
+            className={`h-10 md:h-12 object-contain transition-opacity duration-500 ${
+              scrolled
+                ? "opacity-100 cursor-pointer"
+                : "opacity-0 cursor-default "
+            }`}
+          />
+        </a>
 
         {/* Botón hamburguesa para móviles */}
         <button
