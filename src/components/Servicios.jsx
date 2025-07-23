@@ -44,7 +44,7 @@ const Servicios = () => {
   return (
     <section
       id="servicios"
-      className="py-20 px-6 bg-gray-100 text-[var(--color-tertiary)]"
+      className="pt-20 pb-0 px-6 bg-gray-100 text-[var(--color-tertiary)]"
     >
       <div className="max-w-6xl mx-auto text-center">
         <h2 className="text-3xl md:text-4xl font-bold mb-12 text-[var(--color-primary)]">
