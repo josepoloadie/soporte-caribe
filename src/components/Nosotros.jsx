@@ -5,7 +5,7 @@ const Nosotros = () => {
   return (
     <section
       id="nosotros"
-      className="py-20 px-6 bg-white text-[var(--color-tertiary)]"
+      className="pt-20 pb-0 px-6 bg-white text-[var(--color-tertiary)]"
     >
       <div className="max-w-5xl mx-auto text-center">
         <h2 className="text-3xl md:text-4xl font-bold mb-12 text-[var(--color-primary)]">
@@ -13,12 +13,19 @@ const Nosotros = () => {
         </h2>
 
         <p className="text-lg md:text-xl mb-10 max-w-3xl mx-auto">
-          En <strong>Soporte Caribe</strong> contamos con más de{" "}
-          <strong>23 años de experiencia</strong> brindando servicios técnicos
-          especializados. Nos destacamos por ofrecer una atención{" "}
-          <strong>eficiente, confiable</strong> y con{" "}
-          <strong>altos estándares de calidad</strong> en cada solución que
-          entregamos.
+          Brindamos <strong>servicios integrales</strong> en{" "}
+          <strong>soluciones de equipos de cómputo</strong>, garantizando{" "}
+          <strong>altos estándares de calidad</strong> para satisfacer
+          plenamente las expectativas de nuestros clientes. Nos enfocamos en{" "}
+          <strong>ampliar nuestra cobertura a nivel nacional</strong>,{" "}
+          <strong>
+            promover el desarrollo continuo de nuestros colaboradores
+          </strong>{" "}
+          y{" "}
+          <strong>
+            asegurar resultados eficientes en operación y rentabilidad
+          </strong>
+          .
           <br className="hidden md:block" />
           <span className="block mt-4 text-[var(--color-secondary)] font-semibold text-sm">
             Con nosotros, tu tecnología está en manos seguras.
@@ -31,9 +38,16 @@ const Nosotros = () => {
               Misión
             </h3>
             <p className="text-base text-[var(--color-tertiary)] leading-relaxed">
-              Brindar <strong>soluciones técnicas oportunas y efectivas</strong>{" "}
-              en el campo de la tecnología, generando <strong>confianza</strong>{" "}
-              y <strong>respaldo</strong> a nuestros clientes a nivel nacional.
+              Ser reconocidos en Colombia como la <strong>mejor opción</strong>{" "}
+              en{" "}
+              <strong>servicios de equipos de cómputo y comunicaciones</strong>,
+              destacándonos por nuestra <strong>confiabilidad</strong>,{" "}
+              <strong>innovación constante</strong>,{" "}
+              <strong>excelencia operativa</strong> y{" "}
+              <strong>
+                compromiso con el desarrollo integral de nuestro talento humano
+              </strong>
+              .
             </p>
           </div>
 
