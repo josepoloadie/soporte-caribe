@@ -5,7 +5,7 @@ const Nosotros = () => {
   return (
     <section
       id="nosotros"
-      className="pt-20 pb-0 px-6 bg-white text-[var(--color-tertiary)]"
+      className="py-20 px-6 bg-white text-[var(--color-tertiary)]"
     >
       <div className="max-w-5xl mx-auto text-center">
         <h2 className="text-3xl md:text-4xl font-bold mb-12 text-[var(--color-primary)]">
@@ -38,14 +38,17 @@ const Nosotros = () => {
               Misión
             </h3>
             <p className="text-base text-[var(--color-tertiary)] leading-relaxed">
-              Ser reconocidos en Colombia como la <strong>mejor opción</strong>{" "}
-              en{" "}
-              <strong>servicios de equipos de cómputo y comunicaciones</strong>,
-              destacándonos por nuestra <strong>confiabilidad</strong>,{" "}
-              <strong>innovación constante</strong>,{" "}
-              <strong>excelencia operativa</strong> y{" "}
+              Brindamos <strong>servicios integrales</strong> en{" "}
+              <strong>soluciones de equipos de cómputo</strong>, garantizando{" "}
+              <strong>altos estándares de calidad</strong> para satisfacer
+              plenamente las expectativas de nuestros clientes. Nos enfocamos en{" "}
+              <strong>ampliar nuestra cobertura a nivel nacional</strong>,{" "}
               <strong>
-                compromiso con el desarrollo integral de nuestro talento humano
+                promover el desarrollo continuo de nuestros colaboradores
+              </strong>{" "}
+              y{" "}
+              <strong>
+                asegurar resultados eficientes en operación y rentabilidad
               </strong>
               .
             </p>
@@ -56,13 +59,16 @@ const Nosotros = () => {
               Visión
             </h3>
             <p className="text-base text-[var(--color-tertiary)] leading-relaxed">
-              Ser la{" "}
+              Ser reconocidos en Colombia como la <strong>mejor opción</strong>{" "}
+              en{" "}
+              <strong>servicios de equipos de cómputo y comunicaciones</strong>,
+              destacándonos por nuestra <strong>confiabilidad</strong>,{" "}
+              <strong>innovación constante</strong>,{" "}
+              <strong>excelencia operativa</strong> y{" "}
               <strong>
-                empresa líder en soporte técnico especializado en Colombia
+                compromiso con el desarrollo integral de nuestro talento humano
               </strong>
-              , reconocida por su <strong>compromiso</strong>,{" "}
-              <strong>experiencia</strong> y{" "}
-              <strong>excelencia en el servicio</strong>.
+              .
             </p>
           </div>
         </div>
