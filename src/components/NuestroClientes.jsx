@@ -4,7 +4,7 @@ function NuestrosClientes() {
   const clientes = [
     { nombre: "Soporte SA", logo: "/logos/SoporteSA.png" },
     { nombre: "Cabot Colombiana", logo: "/logos/Cabot.png" },
-    { nombre: "Vygon Colombia", logo: "/logos/VygonColombia.png" },
+    { nombre: "Vygon Colombia", logo: "/logos/Vygon.svg" },
   ];
 
   return (
