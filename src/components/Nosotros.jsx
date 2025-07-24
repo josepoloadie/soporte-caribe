@@ -13,12 +13,19 @@ const Nosotros = () => {
         </h2>
 
         <p className="text-lg md:text-xl mb-10 max-w-3xl mx-auto">
-          En <strong>Soporte Caribe</strong> contamos con más de{" "}
-          <strong>23 años de experiencia</strong> brindando servicios técnicos
-          especializados. Nos destacamos por ofrecer una atención{" "}
-          <strong>eficiente, confiable</strong> y con{" "}
-          <strong>altos estándares de calidad</strong> en cada solución que
-          entregamos.
+          Brindamos <strong>servicios integrales</strong> en{" "}
+          <strong>soluciones de equipos de cómputo</strong>, garantizando{" "}
+          <strong>altos estándares de calidad</strong> para satisfacer
+          plenamente las expectativas de nuestros clientes. Nos enfocamos en{" "}
+          <strong>ampliar nuestra cobertura a nivel nacional</strong>,{" "}
+          <strong>
+            promover el desarrollo continuo de nuestros colaboradores
+          </strong>{" "}
+          y{" "}
+          <strong>
+            asegurar resultados eficientes en operación y rentabilidad
+          </strong>
+          .
           <br className="hidden md:block" />
           <span className="block mt-4 text-[var(--color-secondary)] font-semibold text-sm">
             Con nosotros, tu tecnología está en manos seguras.
