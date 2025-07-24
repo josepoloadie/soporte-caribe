@@ -21,7 +21,7 @@ function NuestrosClientes() {
           {clientes.map((cliente, index) => (
             <motion.div
               key={index}
-              className="rounded-2xl overflow-hidden h-32 shadow-md hover:shadow-xl transition-shadow duration-300 flex flex-col items-center justify-center p-4 group"
+              className="rounded-2xl overflow-hidden h-24 shadow-md hover:shadow-xl transition-shadow duration-300 flex flex-col items-center justify-center p-4 group"
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
@@ -30,7 +30,7 @@ function NuestrosClientes() {
               <img
                 src={cliente.logo}
                 alt={cliente.nombre}
-                className="h-24 md:h-28 object-contain mb-4 transition-transform duration-300 group-hover:scale-105"
+                className="h-12 md:h-16 object-contain mb-2 transition-transform duration-300 group-hover:scale-115"
               />
             </motion.div>
           ))}
