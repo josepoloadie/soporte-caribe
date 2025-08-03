@@ -1,0 +1,35 @@
+/* Importamos las utilidades base de Tailwind CSS */
+@import "tailwindcss";
+
+/* 🎨 Tokens personalizados de diseño como variables globales */
+:root {
+  --color-primary: #004a97; /* Azul oscuro - color principal de la marca */
+  --color-secondary: #0084cb; /* Azul claro - color secundario */
+  --color-tertiary: #1d1d1b; /* Negro profundo - textos y detalles */
+  --color-quaternary: #3c3c3b; /* Gris oscuro */
+  --color-neutral: #878787; /* Gris neutro para elementos secundarios */
+
+  /* Tipografía base utilizada en toda la web */
+  --font-base: ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ✨ Animación fade-in */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+
+/* Comportamiento suave para el scroll al hacer clic en anclas internas (#id) */
+html {
+  scroll-behavior: smooth;
+}
