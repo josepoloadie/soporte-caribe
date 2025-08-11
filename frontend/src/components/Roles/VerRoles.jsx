@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Edit, Trash2 } from "lucide-react";
+import ConfirmDialog from "../ConfirmDialog"; // ⬅️ mismo modal que en Usuarios
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -10,20 +11,24 @@ const VerRoles = ({ onEditar }) => {
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState("");
 
+  // Modal de confirmación
+  const [openConfirm, setOpenConfirm] = useState(false);
+  const [rolAEliminar, setRolAEliminar] = useState(null);
+  const [eliminando, setEliminando] = useState(false);
+
   const fetchRoles = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const params = new URLSearchParams({
-        page: pagina,
-        limit: 10,
-      });
+      const params = new URLSearchParams({ page: pagina, limit: 10 });
 
       const res = await fetch(`${API_URL}/roles?${params}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
+
+      // Manejo de 401/428 opcional (si navegas en este componente)
+      // if (res.status === 401) return navigate("/login");
+      // if (res.status === 428) return navigate("/cambiar-password");
 
       const data = await res.json();
 
@@ -42,33 +47,39 @@ const VerRoles = ({ onEditar }) => {
     }
   };
 
-  const handleEliminar = async (id) => {
-    const confirmar = confirm("¿Deseas eliminar este rol?");
-    if (!confirmar) return;
+  useEffect(() => {
+    fetchRoles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagina]);
 
+  const solicitarEliminar = (rol) => {
+    setRolAEliminar(rol);
+    setOpenConfirm(true);
+  };
+
+  const confirmarEliminar = async () => {
+    if (!rolAEliminar?.id) return;
+    setEliminando(true);
     try {
       const token = localStorage.getItem("token");
-
-      const res = await fetch(`${API_URL}/roles/${id}`, {
+      const res = await fetch(`${API_URL}/roles/${rolAEliminar.id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.mensaje || "Error al eliminar");
 
-      setRoles((prev) => prev.filter((r) => r.id !== id));
+      setRoles((prev) => prev.filter((r) => r.id !== rolAEliminar.id));
+      setMensaje("Rol eliminado correctamente");
+      setOpenConfirm(false);
+      setRolAEliminar(null);
     } catch (err) {
-      alert(err.message);
+      setMensaje(err.message || "No se pudo eliminar el rol");
+    } finally {
+      setEliminando(false);
     }
   };
-
-  useEffect(() => {
-    fetchRoles();
-  }, [pagina]);
 
   return (
     <div className="p-4 max-w-6xl mx-auto">
@@ -94,12 +105,14 @@ const VerRoles = ({ onEditar }) => {
                     <button
                       className="text-yellow-600 hover:scale-110 transition"
                       onClick={() => onEditar && onEditar(rol.id)}
+                      aria-label={`Editar rol ${rol.nombre}`}
                     >
                       <Edit size={22} />
                     </button>
                     <button
                       className="text-red-600 hover:scale-110 transition"
-                      onClick={() => handleEliminar(rol.id)}
+                      onClick={() => solicitarEliminar(rol)}
+                      aria-label={`Eliminar rol ${rol.nombre}`}
                     >
                       <Trash2 size={22} />
                     </button>
@@ -134,19 +147,23 @@ const VerRoles = ({ onEditar }) => {
                   roles.map((rol) => (
                     <tr key={rol.id} className="border-b hover:bg-gray-50">
                       <td className="p-3">{rol.nombre}</td>
-                      <td className="p-3 text-center flex justify-center gap-4">
-                        <button
-                          className="text-yellow-600 hover:underline"
-                          onClick={() => onEditar && onEditar(rol.id)}
-                        >
-                          <Edit size={20} />
-                        </button>
-                        <button
-                          className="text-red-600 hover:underline"
-                          onClick={() => handleEliminar(rol.id)}
-                        >
-                          <Trash2 size={20} />
-                        </button>
+                      <td className="p-3">
+                        <div className="flex justify-center gap-4">
+                          <button
+                            className="text-yellow-600 hover:underline"
+                            onClick={() => onEditar && onEditar(rol.id)}
+                            aria-label={`Editar rol ${rol.nombre}`}
+                          >
+                            <Edit size={20} />
+                          </button>
+                          <button
+                            className="text-red-600 hover:underline"
+                            onClick={() => solicitarEliminar(rol)}
+                            aria-label={`Eliminar rol ${rol.nombre}`}
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -183,6 +200,26 @@ const VerRoles = ({ onEditar }) => {
           Siguiente
         </button>
       </div>
+
+      {/* ConfirmDialog — ajusta props si tu componente usa otros nombres */}
+      <ConfirmDialog
+        open={openConfirm} // o isOpen
+        title="Confirmar eliminación"
+        message={
+          rolAEliminar
+            ? `¿Deseas eliminar el rol "${rolAEliminar.nombre}"?`
+            : "¿Deseas eliminar este rol?"
+        } // o usa children si tu modal lo prefiere
+        confirmText={eliminando ? "Eliminando..." : "Eliminar"}
+        cancelText="Cancelar"
+        disabled={eliminando}
+        onConfirm={confirmarEliminar}
+        onClose={() => {
+          if (eliminando) return;
+          setOpenConfirm(false);
+          setRolAEliminar(null);
+        }}
+      />
     </div>
   );
 };
