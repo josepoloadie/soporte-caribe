@@ -10,6 +10,7 @@ import Usuarios from "./pages/Usuario/Usuarios";
 import Roles from "./pages/Rol/Roles";
 import Modulos from "./pages/Modulo/modulos";
 import AsignarModuloARol from "./pages/ModuloARol/ModuloARol";
+import CambiarPassword from "./pages/CambiarPassword";
 
 const App = () => {
   return (
@@ -18,6 +19,7 @@ const App = () => {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/no-autorizado" element={<NoAutorizado />} />
+      <Route path="/cambiar-password" element={<CambiarPassword />} />
       {/*Rutas Privadas*/}
 
       {/*Rutas Admin */}
@@ -29,12 +31,12 @@ const App = () => {
           </PrivateRoute>
         }
       >
-        {/* Rutas anidadas */}
+        <Route index element={<Modulos />} /> {/* 👈 se renderiza en /Admin */}
         <Route path="usuarios" element={<Usuarios />} />
         <Route path="roles" element={<Roles />} />
-        <Route path="modulos" element={<Modulos />} />
+        <Route path="modulos" element={<Modulos />} />{" "}
+        {/* si tienes otra página */}
         <Route path="modulosarol" element={<AsignarModuloARol />} />
-        {/* Puedes seguir agregando más como: <Route path="reportes" element={<Reportes />} /> */}
       </Route>
 
       {/*Rutas Tecnico */}

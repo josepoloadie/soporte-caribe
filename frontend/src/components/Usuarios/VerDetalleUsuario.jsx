@@ -1,47 +1,87 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Loader2,
+  User as UserIcon,
+  Mail,
+  Phone,
+  BadgeCheck,
+  XCircle,
+  Shield,
+  Calendar,
+} from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const VerDetalleUsuario = ({ usuario, volver }) => {
-  const [user, setUsuario] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(null);
   const [mensaje, setMensaje] = useState("");
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUsuario = async () => {
+    if (!usuario?.id) {
+      setMensaje("No se ha seleccionado ningún usuario.");
+      setLoading(false);
+      return;
+    }
+
+    const ctrl = new AbortController();
+
+    (async () => {
       setLoading(true);
+      setMensaje("");
       try {
         const token = localStorage.getItem("token");
         const res = await fetch(`${API_URL}/usuarios/${usuario.id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
+          signal: ctrl.signal,
         });
 
-        const data = await res.json();
-        if (res.ok) {
-          setUsuario(data);
-          setMensaje("");
-        } else {
-          setMensaje(data.mensaje || "Error al obtener el usuario");
+        if (res.status === 401) return navigate("/login", { replace: true });
+        if (res.status === 428)
+          return navigate("/cambiar-password", { replace: true });
+
+        const json = await res.json();
+        if (!res.ok)
+          throw new Error(json?.mensaje || "Error al obtener el usuario");
+        setData(json);
+      } catch (e) {
+        if (e.name !== "AbortError") {
+          setMensaje(e.message || "Error al conectar con el servidor");
         }
-      } catch (error) {
-        setMensaje("Error al conectar con el servidor", error);
       } finally {
         setLoading(false);
       }
-    };
+    })();
 
-    if (usuario.id) {
-      fetchUsuario();
-    }
-  }, [usuario.id]);
+    return () => ctrl.abort();
+  }, [usuario?.id, navigate]);
 
-  if (!usuario) return <p>No se ha seleccionado ningún usuario.</p>;
+  const formatoFecha = (iso) =>
+    iso
+      ? new Date(iso).toLocaleString("es-CO", { timeZone: "America/Bogota" })
+      : "No ha iniciado sesión";
 
-  if (loading) return <p>Cargando usuario...</p>;
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center gap-2 text-gray-700">
+        <Loader2 className="animate-spin" /> Cargando usuario…
+      </div>
+    );
+  }
 
-  if (mensaje) return <p className="text-red-600">{mensaje}</p>;
+  if (mensaje) {
+    return (
+      <div className="p-6 text-red-700 bg-red-50 border border-red-200 rounded">
+        {mensaje}
+      </div>
+    );
+  }
+
+  if (!data) {
+    return <div className="p-6">No se encontró el usuario.</div>;
+  }
 
   return (
     <div className="max-w-md mx-auto bg-white p-6 rounded shadow">
@@ -49,34 +89,44 @@ const VerDetalleUsuario = ({ usuario, volver }) => {
         Detalle del Usuario
       </h2>
 
-      <p>
-        <strong>Identificación:</strong> {user.identificacion}
-      </p>
-      <p>
-        <strong>Nombre:</strong> {user.nombre}
-      </p>
-      <p>
-        <strong>Correo:</strong> {user.correo}
-      </p>
-      <p>
-        <strong>Telefono:</strong> {user.telefono}
-      </p>
-      <p>
-        <strong>Status:</strong> {user.status ? "Activado" : "Desactivado"}
-      </p>
-      <p>
-        <strong>Rol:</strong> {user.rol?.nombre || "Sin rol"}
-      </p>
-      <p>
-        <strong>Última Conexión:</strong>{" "}
-        {user.ultima_conexion
-          ? new Date(user.ultima_conexion).toLocaleString("es-CO")
-          : "No ha iniciado sesión"}
-      </p>
+      <div className="space-y-2 text-sm">
+        <p className="flex items-center gap-2">
+          <UserIcon size={16} className="text-gray-500" />
+          <strong>Identificación:</strong> {data.identificacion}
+        </p>
+        <p className="flex items-center gap-2">
+          <UserIcon size={16} className="text-gray-500" />
+          <strong>Nombre:</strong> {data.nombre}
+        </p>
+        <p className="flex items-center gap-2">
+          <Mail size={16} className="text-gray-500" />
+          <strong>Correo:</strong> {data.correo}
+        </p>
+        <p className="flex items-center gap-2">
+          <Phone size={16} className="text-gray-500" />
+          <strong>Teléfono:</strong> {data.telefono}
+        </p>
+        <p className="flex items-center gap-2">
+          {data.status ? (
+            <BadgeCheck size={16} className="text-green-600" />
+          ) : (
+            <XCircle size={16} className="text-red-600" />
+          )}
+          <strong>Estado:</strong> {data.status ? "Activado" : "Desactivado"}
+        </p>
+        <p className="flex items-center gap-2">
+          <Shield size={16} className="text-gray-500" />
+          <strong>Rol:</strong> {data.rol?.nombre || "Sin rol"}
+        </p>
+        <p className="flex items-center gap-2">
+          <Calendar size={16} className="text-gray-500" />
+          <strong>Última Conexión:</strong> {formatoFecha(data.ultima_conexion)}
+        </p>
+      </div>
 
       <button
         onClick={volver}
-        className="mt-4 px-4 py-2 bg-[var(--color-primary)] text-white rounded hover:bg-[var(--color-secondary)]"
+        className="mt-6 w-full px-4 py-2 bg-[var(--color-primary)] text-white rounded hover:bg-[var(--color-secondary)] transition"
       >
         Volver
       </button>
