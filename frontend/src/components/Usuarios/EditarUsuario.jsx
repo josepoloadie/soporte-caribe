@@ -8,6 +8,8 @@ const EditarUsuario = ({ user, volver }) => {
   const [mensaje, setMensaje] = useState("");
   const [loading, setLoading] = useState(true);
 
+  console.log(user);
+
   const [form, setForm] = useState({
     identificacion: "",
     nombre: "",

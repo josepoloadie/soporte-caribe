@@ -3,9 +3,13 @@ import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import TecnicoDashboard from "./pages/TecnicoDashboard";
-import Usuarios from "./pages/Usuarios";
 import NoAutorizado from "./pages/NoAutorizado";
 import PrivateRoute from "./auth/PrivateRoute";
+
+import Usuarios from "./pages/Usuario/Usuarios";
+import Roles from "./pages/Rol/Roles";
+import Modulos from "./pages/Modulo/modulos";
+import AsignarModuloARol from "./pages/ModuloARol/ModuloARol";
 
 const App = () => {
   return (
@@ -27,6 +31,9 @@ const App = () => {
       >
         {/* Rutas anidadas */}
         <Route path="usuarios" element={<Usuarios />} />
+        <Route path="roles" element={<Roles />} />
+        <Route path="modulos" element={<Modulos />} />
+        <Route path="modulosarol" element={<AsignarModuloARol />} />
         {/* Puedes seguir agregando más como: <Route path="reportes" element={<Reportes />} /> */}
       </Route>
 
@@ -39,6 +46,9 @@ const App = () => {
           </PrivateRoute>
         }
       />
+      {/* Rutas anidadas */}
+      {/* <Route path="usuarios" element={<Usuarios />} />
+      <Route path="usuarios" element={<Usuarios />} /> */}
     </Routes>
   );
 };

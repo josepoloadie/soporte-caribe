@@ -1,32 +1,21 @@
 import { useState } from "react";
 import { UserPlus, Upload, Users, Search, Trash2, Menu, X } from "lucide-react";
 
-import CrearUsuario from "../components/Usuarios/CrearUsuario";
-import CrearUsuarioMasivo from "../components/Usuarios/CrearUsuarioMasivo";
-import VerUsuarios from "../components/Usuarios/VerUsuarios";
-import EditarUsuario from "../components/Usuarios/EditarUsuario";
-import VerDetalleUsuario from "../components/Usuarios/VerDetalleUsuario";
+import CrearRol from "../../components/Roles/CrearRol";
+import EditarRol from "../../components/Roles/EditarRol";
+import VerRoles from "../../components/Roles/VerRoles";
 
-const Usuarios = () => {
-  const [opcion, setOpcion] = useState("crear");
+const Roles = () => {
+  const [opcion, setOpcion] = useState("ver");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [accionUsuario, setAccionUsuario] = useState(null); // 'ver' | 'editar' | null
-  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
+  const [rolSeleccionado, setRolSeleccionado] = useState(null);
 
   const renderContenido = () => {
-    if (accionUsuario === "ver") {
-      return (
-        <VerDetalleUsuario
-          usuario={usuarioSeleccionado}
-          volver={() => setAccionUsuario(null)}
-        />
-      );
-    }
-
     if (accionUsuario === "editar") {
       return (
-        <EditarUsuario
-          user={usuarioSeleccionado}
+        <EditarRol
+          rolId={rolSeleccionado}
           volver={() => setAccionUsuario(null)}
         />
       );
@@ -34,36 +23,26 @@ const Usuarios = () => {
 
     switch (opcion) {
       case "crear":
-        return <CrearUsuario />;
-      case "masivo":
-        return <CrearUsuarioMasivo />;
+        return <CrearRol />;
+
       case "ver":
         return (
-          <VerUsuarios
-            onVer={(usuario) => {
-              setUsuarioSeleccionado(usuario);
-              setAccionUsuario("ver");
-            }}
+          <VerRoles
             onEditar={(usuario) => {
-              setUsuarioSeleccionado(usuario);
+              setRolSeleccionado(usuario);
               setAccionUsuario("editar");
             }}
           />
         );
 
       default:
-        return <VerUsuarios />;
+        return <VerRoles />;
     }
   };
 
   const opcionesMenu = [
-    { key: "crear", label: "Crear Usuario", icon: <UserPlus size={18} /> },
-    {
-      key: "masivo",
-      label: "Crear Usuario Masivo",
-      icon: <Upload size={18} />,
-    },
-    { key: "ver", label: "Ver Usuarios", icon: <Users size={18} /> },
+    { key: "ver", label: "Ver Roles", icon: <Users size={18} /> },
+    { key: "crear", label: "Crear Rol", icon: <UserPlus size={18} /> },
   ];
 
   return (
@@ -81,7 +60,7 @@ const Usuarios = () => {
         className={`fixed sm:static top-16 left-0 w-64 h-[calc(100vh-64px)] bg-[var(--color-primary)] text-white p-4 space-y-2 z-40 transform transition-transform duration-300 ease-in-out overflow-y-auto
     ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} sm:translate-x-0`}
       >
-        <h2 className="text-xl font-bold mb-4">Usuarios</h2>
+        <h2 className="text-xl font-bold mb-4">Roles</h2>
         {opcionesMenu.map(({ key, label, icon }) => (
           <button
             key={key}
@@ -106,4 +85,4 @@ const Usuarios = () => {
   );
 };
 
-export default Usuarios;
+export default Roles;
