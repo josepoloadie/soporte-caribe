@@ -1,19 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import ConfirmDialog from "../ConfirmDialog"; // mismo modal
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 /**
  * EditarModulo
- * Formulario para editar un módulo existente: { nombre, descripcion, ruta }
- *
- * Requisitos de backend asumidos (ajusta si difiere):
- *   GET  /modulos/:id              -> { id, nombre, descripcion, ruta }
- *   PUT  /modulos/:id              -> { mensaje, ...moduloActualizado }
- *
- * Props:
- *   - moduloId: string (requerido)
- *   - onUpdated?: (data) => void
- *   - onCancel?: () => void
+ * - Normaliza y valida ruta.
+ * - Maneja 401/428.
+ * - Confirma al cancelar si hay cambios (ConfirmDialog).
  */
 export default function EditarModulo({ moduloId, onUpdated, onCancel }) {
   const [cargando, setCargando] = useState(true);
@@ -31,6 +26,9 @@ export default function EditarModulo({ moduloId, onUpdated, onCancel }) {
   });
 
   const [errores, setErrores] = useState({});
+  const [openConfirm, setOpenConfirm] = useState(false);
+
+  const navigate = useNavigate();
 
   const token = useMemo(() => localStorage.getItem("token"), []);
   const headers = useMemo(
@@ -41,6 +39,22 @@ export default function EditarModulo({ moduloId, onUpdated, onCancel }) {
     [token]
   );
 
+  // Utilidades de ruta (mismas reglas que CrearModulo)
+  const normalizarRuta = (v) => {
+    const trimmed = String(v ?? "")
+      .trim()
+      .toLowerCase();
+    if (!trimmed) return "";
+    let r = trimmed
+      .replace(/\s+/g, "")
+      .replace(/^\/+/, "")
+      .replace(/\/{2,}/g, "/");
+    if (r.endsWith("/") && r !== "") r = r.replace(/\/+$/, "");
+    return "/" + r;
+  };
+  const rutaEsValida = (r) =>
+    /^\/(?:[a-z0-9-]+(?:\/[a-z0-9-]+)*)?$/.test(r || "");
+
   const hayCambios = useMemo(
     () =>
       nombre !== snapshot.nombre ||
@@ -49,6 +63,17 @@ export default function EditarModulo({ moduloId, onUpdated, onCancel }) {
     [nombre, descripcion, ruta, snapshot]
   );
 
+  // Autolimpia mensajes
+  useEffect(() => {
+    if (!mensaje && !error) return;
+    const t = setTimeout(() => {
+      setMensaje("");
+      setError("");
+    }, 3500);
+    return () => clearTimeout(t);
+  }, [mensaje, error]);
+
+  // Cargar módulo
   useEffect(() => {
     const cargar = async () => {
       if (!moduloId) {
@@ -60,11 +85,15 @@ export default function EditarModulo({ moduloId, onUpdated, onCancel }) {
         setError("");
         setCargando(true);
         const res = await fetch(`${API_URL}/modulos/${moduloId}`, { headers });
+
+        if (res.status === 401) return navigate("/login");
+        if (res.status === 428) return navigate("/cambiar-password");
+
         const data = await res.json();
-        // Soportar varias formas {modulo: {...}} | {...} | [{...}]
         const m = data?.modulo ?? (Array.isArray(data) ? data[0] : data);
         if (!m || !m.id) throw new Error("No se encontró el módulo");
 
+        // Mantén valores tal cual vienen; normalizamos al enviar / onBlur
         setNombre(m.nombre ?? "");
         setDescripcion(m.descripcion ?? "");
         setRuta(m.ruta ?? "");
@@ -80,13 +109,17 @@ export default function EditarModulo({ moduloId, onUpdated, onCancel }) {
       }
     };
     cargar();
-  }, [moduloId, headers]);
+  }, [moduloId, headers, navigate]);
 
   const validar = () => {
     const e = {};
     if (!nombre.trim()) e.nombre = "El nombre es obligatorio";
-    if (!ruta.trim()) e.ruta = "La ruta es obligatoria";
-    if (ruta && !ruta.startsWith("/")) e.ruta = "La ruta debe iniciar con '/'";
+
+    const r = normalizarRuta(ruta);
+    if (!r) e.ruta = "La ruta es obligatoria";
+    else if (!rutaEsValida(r))
+      e.ruta = "Usa solo letras/números y guiones. Ej: /admin/usuarios";
+
     if (descripcion.length > 200) e.descripcion = "Máximo 200 caracteres";
     setErrores(e);
     return Object.keys(e).length === 0;
@@ -102,9 +135,9 @@ export default function EditarModulo({ moduloId, onUpdated, onCancel }) {
       setError("");
 
       const payload = {
-        nombre: nombre.trim(),
+        nombre: nombre.trim().replace(/\s+/g, " "),
         descripcion: descripcion.trim(),
-        ruta: ruta.trim(),
+        ruta: normalizarRuta(ruta),
       };
 
       const res = await fetch(`${API_URL}/modulos/${moduloId}`, {
@@ -112,8 +145,21 @@ export default function EditarModulo({ moduloId, onUpdated, onCancel }) {
         headers,
         body: JSON.stringify(payload),
       });
+
+      if (res.status === 401) {
+        setGuardando(false);
+        return navigate("/login");
+      }
+      if (res.status === 428) {
+        setGuardando(false);
+        return navigate("/cambiar-password");
+      }
+
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        if (data?.errores && typeof data.errores === "object") {
+          setErrores((prev) => ({ ...prev, ...data.errores }));
+        }
         const msg =
           data?.mensaje ||
           (res.status === 409
@@ -122,14 +168,13 @@ export default function EditarModulo({ moduloId, onUpdated, onCancel }) {
         throw new Error(msg);
       }
 
-      setSnapshot({
-        nombre: payload.nombre,
-        descripcion: payload.descripcion,
-        ruta: payload.ruta,
-      });
+      setSnapshot(payload);
+      setNombre(payload.nombre);
+      setDescripcion(payload.descripcion);
+      setRuta(payload.ruta);
+
       setMensaje(data?.mensaje || "Módulo actualizado");
       if (typeof onUpdated === "function") onUpdated(data);
-      setTimeout(() => setMensaje(""), 3000);
     } catch (e) {
       setError(e.message || "Error al actualizar");
     } finally {
@@ -137,13 +182,23 @@ export default function EditarModulo({ moduloId, onUpdated, onCancel }) {
     }
   };
 
+  const rutaPreview = normalizarRuta(ruta);
+
+  const handleCancel = () => {
+    if (!onCancel) return;
+    if (hayCambios) setOpenConfirm(true);
+    else onCancel();
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto p-4 sm:p-6 bg-white border rounded-2xl shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold">Editar módulo</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-[var(--color-primary)]">
+          Editar módulo
+        </h2>
         {onCancel && (
           <button
-            onClick={onCancel}
+            onClick={handleCancel}
             className="px-3 py-1.5 rounded-xl border hover:bg-gray-50"
           >
             Volver
@@ -177,8 +232,8 @@ export default function EditarModulo({ moduloId, onUpdated, onCancel }) {
               type="text"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              className={`mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                errores.nombre ? "border-red-300" : ""
+              className={`mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/40 ${
+                errores.nombre ? "border-red-300" : "border-gray-300"
               }`}
               placeholder="Nombre del módulo"
               maxLength={80}
@@ -194,8 +249,8 @@ export default function EditarModulo({ moduloId, onUpdated, onCancel }) {
             <textarea
               value={descripcion}
               onChange={(e) => setDescripcion(e.target.value)}
-              className={`mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                errores.descripcion ? "border-red-300" : ""
+              className={`mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/40 ${
+                errores.descripcion ? "border-red-300" : "border-gray-300"
               }`}
               placeholder="Descripción"
               rows={3}
@@ -216,13 +271,20 @@ export default function EditarModulo({ moduloId, onUpdated, onCancel }) {
               type="text"
               value={ruta}
               onChange={(e) => setRuta(e.target.value)}
-              className={`mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                errores.ruta ? "border-red-300" : ""
+              onBlur={() => setRuta((r) => normalizarRuta(r))}
+              className={`mt-1 w-full rounded-xl border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/40 ${
+                errores.ruta ? "border-red-300" : "border-gray-300"
               }`}
               placeholder="/ruta-del-modulo"
               maxLength={120}
               disabled={guardando}
             />
+            {ruta && (
+              <div className="mt-1 text-xs text-gray-500">
+                Ruta final:{" "}
+                <span className="font-mono">{rutaPreview || "/"}</span>
+              </div>
+            )}
             {errores.ruta && (
               <p className="text-xs text-red-600 mt-1">{errores.ruta}</p>
             )}
@@ -232,7 +294,7 @@ export default function EditarModulo({ moduloId, onUpdated, onCancel }) {
             {onCancel && (
               <button
                 type="button"
-                onClick={onCancel}
+                onClick={handleCancel}
                 className="px-4 py-2 rounded-xl border hover:bg-gray-50"
               >
                 Cancelar
@@ -241,7 +303,12 @@ export default function EditarModulo({ moduloId, onUpdated, onCancel }) {
             <button
               type="submit"
               disabled={guardando || !hayCambios}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white disabled:opacity-50 hover:bg-indigo-700"
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white
+                ${
+                  guardando || !hayCambios
+                    ? "bg-[var(--color-primary)]/60 cursor-not-allowed"
+                    : "bg-[var(--color-primary)] hover:bg-[var(--color-secondary)]"
+                }`}
             >
               {guardando && (
                 <span className="h-4 w-4 rounded-full border-2 border-white/80 border-t-transparent animate-spin" />
@@ -251,6 +318,20 @@ export default function EditarModulo({ moduloId, onUpdated, onCancel }) {
           </div>
         </form>
       )}
+
+      {/* Confirmación al salir con cambios sin guardar */}
+      <ConfirmDialog
+        open={openConfirm}
+        title="Hay cambios sin guardar"
+        message="¿Deseas descartar los cambios?"
+        confirmText="Descartar"
+        cancelText="Seguir editando"
+        onConfirm={() => {
+          setOpenConfirm(false);
+          onCancel?.();
+        }}
+        onClose={() => setOpenConfirm(false)}
+      />
     </div>
   );
 }

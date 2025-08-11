@@ -1,15 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Edit, Trash2, RefreshCcw } from "lucide-react";
+import ConfirmDialog from "../ConfirmDialog"; // ← mismo modal
 
 const API_URL = import.meta.env.VITE_API_URL;
 const PAGE_SIZE = 10;
 
 /**
- * VerModulos (mejorado)
- * - Lista responsiva con paginación
- * - Maneja múltiples formatos de respuesta del backend
- * - Mensajes/errores consistentes
- * - Refetch inteligente tras eliminar (si queda vacía la página, retrocede)
+ * VerModulos (con ConfirmDialog)
  */
 export default function VerModulos({ onEditar }) {
   const [modulos, setModulos] = useState([]);
@@ -17,6 +14,11 @@ export default function VerModulos({ onEditar }) {
   const [totalPaginas, setTotalPaginas] = useState(1);
   const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState("");
+
+  // Modal de confirmación
+  const [openConfirm, setOpenConfirm] = useState(false);
+  const [moduloAEliminar, setModuloAEliminar] = useState(null);
+  const [eliminando, setEliminando] = useState(false);
 
   const token = useMemo(() => localStorage.getItem("token"), []);
 
@@ -32,7 +34,6 @@ export default function VerModulos({ onEditar }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.mensaje || "Error al obtener módulos");
 
-      // Normalizar lista
       const lista = Array.isArray(data)
         ? data
         : Array.isArray(data?.modulos)
@@ -43,7 +44,6 @@ export default function VerModulos({ onEditar }) {
         ? data.data
         : [];
 
-      // Normalizar total de páginas
       const tp =
         data?.totalPaginas ??
         (typeof data?.total === "number" && typeof data?.limit === "number"
@@ -61,35 +61,44 @@ export default function VerModulos({ onEditar }) {
     }
   };
 
-  const handleEliminar = async (id) => {
-    const confirmar = confirm("¿Deseas eliminar este módulo?");
-    if (!confirmar) return;
+  useEffect(() => {
+    fetchModulos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagina]);
+
+  const solicitarEliminar = (modulo) => {
+    setModuloAEliminar(modulo);
+    setOpenConfirm(true);
+  };
+
+  const confirmarEliminar = async () => {
+    if (!moduloAEliminar?.id) return;
+    setEliminando(true);
     try {
-      const res = await fetch(`${API_URL}/modulos/${id}`, {
+      const res = await fetch(`${API_URL}/modulos/${moduloAEliminar.id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.mensaje || "Error al eliminar");
 
-      // Si eliminamos el último de la página, retrocedemos una página (si es posible)
+      // Si eliminamos el último de la página, retrocedemos (si se puede)
       const quedan = modulos.length - 1;
       if (quedan === 0 && pagina > 1) {
         setPagina((p) => Math.max(1, p - 1));
-        // fetch se disparará por el useEffect de pagina
       } else {
-        // Refrescar en la misma página
         fetchModulos();
       }
+
+      setMensaje("Módulo eliminado correctamente");
+      setOpenConfirm(false);
+      setModuloAEliminar(null);
     } catch (err) {
-      alert(err.message);
+      setMensaje(err.message || "No se pudo eliminar el módulo");
+    } finally {
+      setEliminando(false);
     }
   };
-
-  useEffect(() => {
-    fetchModulos();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagina]);
 
   return (
     <div className="p-4 max-w-6xl mx-auto">
@@ -109,7 +118,7 @@ export default function VerModulos({ onEditar }) {
       </div>
 
       {mensaje && (
-        <div className="mb-4 rounded-xl p-3 text-sm bg-red-50 text-red-700 border border-red-200">
+        <div className="mb-4 rounded-xl p-3 text-sm bg-gray-50 text-gray-800 border border-gray-200">
           {mensaje}
         </div>
       )}
@@ -130,12 +139,14 @@ export default function VerModulos({ onEditar }) {
                     <button
                       className="text-yellow-600 hover:scale-110 transition"
                       onClick={() => onEditar?.(modulo.id)}
+                      aria-label={`Editar módulo ${modulo.nombre}`}
                     >
                       <Edit size={22} />
                     </button>
                     <button
                       className="text-red-600 hover:scale-110 transition"
-                      onClick={() => handleEliminar(modulo.id)}
+                      onClick={() => solicitarEliminar(modulo)}
+                      aria-label={`Eliminar módulo ${modulo.nombre}`}
                     >
                       <Trash2 size={22} />
                     </button>
@@ -195,12 +206,14 @@ export default function VerModulos({ onEditar }) {
                           <button
                             className="text-yellow-600 hover:underline"
                             onClick={() => onEditar?.(modulo.id)}
+                            aria-label={`Editar módulo ${modulo.nombre}`}
                           >
                             <Edit size={20} />
                           </button>
                           <button
                             className="text-red-600 hover:underline"
-                            onClick={() => handleEliminar(modulo.id)}
+                            onClick={() => solicitarEliminar(modulo)}
+                            aria-label={`Eliminar módulo ${modulo.nombre}`}
                           >
                             <Trash2 size={20} />
                           </button>
@@ -241,6 +254,26 @@ export default function VerModulos({ onEditar }) {
           Siguiente
         </button>
       </div>
+
+      {/* Confirmación de eliminación */}
+      <ConfirmDialog
+        open={openConfirm}
+        title="Confirmar eliminación"
+        message={
+          moduloAEliminar
+            ? `¿Deseas eliminar el módulo "${moduloAEliminar.nombre}"?`
+            : "¿Deseas eliminar este módulo?"
+        }
+        confirmText={eliminando ? "Eliminando..." : "Eliminar"}
+        cancelText="Cancelar"
+        disabled={eliminando}
+        onConfirm={confirmarEliminar}
+        onClose={() => {
+          if (eliminando) return;
+          setOpenConfirm(false);
+          setModuloAEliminar(null);
+        }}
+      />
     </div>
   );
 }
