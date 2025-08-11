@@ -9,14 +9,14 @@ const reId = /^\d{4,20}$/;
 const reEmail = /^[\w-.]+@([\w-]+\.)+[\w-]{2,}$/i;
 const rePhone = /^[0-9+\-()\s]{6,20}$/;
 
-const HEADERS_OPCIONALES = ["contraseña"]; // si usarCedula = true, no exigimos contraseña
+const HEADERS_OPCIONALES = ["contraseña"];
 const HEADERS_VALIDOS = [
   "identificacion",
   "nombre",
   "correo",
   "telefono",
   "rolId",
-  "rolNombre", // si viene, se mapeará a rolId
+  "rolNombre",
   ...HEADERS_OPCIONALES,
 ];
 
@@ -26,14 +26,12 @@ function parseCSV(texto) {
     .replace(/\r/g, "")
     .split("\n")
     .filter((l) => l.trim().length);
-
   if (!lines.length) return { headers: [], rows: [] };
 
   const headers = lines[0]
     .split(sep)
     .map((h) => h.trim())
-    .map((h) => h.replace(/\uFEFF/g, "")); // BOM
-
+    .map((h) => h.replace(/\uFEFF/g, ""));
   const rows = lines.slice(1).map((line) => {
     const cols = line.split(sep).map((c) => c.trim());
     const obj = {};
@@ -52,13 +50,16 @@ const CrearUsuarioMasivo = () => {
   const [textoPegado, setTextoPegado] = useState("");
   const [archivoNombre, setArchivoNombre] = useState("");
   const [headers, setHeaders] = useState([]);
-  const [filas, setFilas] = useState([]); // filas originales
-  const [erroresFila, setErroresFila] = useState([]); // array de arrays con mensajes por fila
+  const [filas, setFilas] = useState([]);
+  const [erroresFila, setErroresFila] = useState([]);
   const [mensaje, setMensaje] = useState({ tipo: "", texto: "" });
   const [enviando, setEnviando] = useState(false);
+  const [reporteErrores, setReporteErrores] = useState("");
+  const [uploadKey, setUploadKey] = useState(0); // ← C) key para remount del input
+
   const navigate = useNavigate();
 
-  // Cargar roles para mapear rolNombre -> rolId
+  // Cargar roles
   useEffect(() => {
     (async () => {
       try {
@@ -93,7 +94,7 @@ const CrearUsuarioMasivo = () => {
     return m;
   }, [roles]);
 
-  // Validar todas las filas cada que cambien dependencias
+  // Validar filas cada cambio
   useEffect(() => {
     const errs = filas.map((f) =>
       validarFila(f, usarCedula, mapaRolesPorNombre, headers)
@@ -110,38 +111,23 @@ const CrearUsuarioMasivo = () => {
 
   function validarFila(fila, usarCed, rolesMap, hdrs) {
     const errs = [];
-
-    // Normaliza keys
     const f = {};
     Object.keys(fila || {}).forEach(
       (k) => (f[k.trim()] = (fila[k] ?? "").toString().trim())
     );
 
-    // Debe tener al menos los headers conocidos
-    const tieneHeaderDesconocido = Object.keys(f).some(
-      (k) => !HEADERS_VALIDOS.includes(k)
-    );
-    if (tieneHeaderDesconocido) {
-      // no bloquea, solo advertimos
-    }
-
-    // Identificación
     if (!f.identificacion) errs.push("identificación requerida");
     else if (!reId.test(f.identificacion))
       errs.push("identificación 4–20 dígitos");
 
-    // Nombre
     if (!f.nombre) errs.push("nombre requerido");
 
-    // Correo
     if (!f.correo) errs.push("correo requerido");
     else if (!reEmail.test(f.correo)) errs.push("correo inválido");
 
-    // Teléfono
     if (!f.telefono) errs.push("teléfono requerido");
     else if (!rePhone.test(f.telefono)) errs.push("teléfono inválido");
 
-    // Rol: acepta rolId o rolNombre
     if (!f.rolId && !f.rolNombre) {
       errs.push("rolId o rolNombre requerido");
     } else if (!f.rolId && f.rolNombre) {
@@ -149,16 +135,12 @@ const CrearUsuarioMasivo = () => {
       if (!id) errs.push(`rolNombre '${f.rolNombre}' no existe`);
     }
 
-    // Contraseña (solo si NO usa cédula)
     if (!usarCed) {
       if (!f.contraseña) errs.push("contraseña requerida");
       else if (f.contraseña.length < 8)
         errs.push("contraseña mínimo 8 caracteres");
     }
 
-    // Si el CSV trae columnas inesperadas, no bloqueamos
-
-    // Si faltan columnas clave en header, marcamos error general
     const reqHeaders = ["identificacion", "nombre", "correo", "telefono"];
     const faltan = reqHeaders.filter((h) => !hdrs.includes(h));
     if (faltan.length) errs.push(`faltan columnas: ${faltan.join(", ")}`);
@@ -180,6 +162,7 @@ const CrearUsuarioMasivo = () => {
     setFilas(rows);
     setTextoPegado(text);
     setMensaje({ tipo: "", texto: "" });
+    setReporteErrores("");
   };
 
   const limpiar = () => {
@@ -189,6 +172,8 @@ const CrearUsuarioMasivo = () => {
     setFilas([]);
     setErroresFila([]);
     setMensaje({ tipo: "", texto: "" });
+    setReporteErrores("");
+    setUploadKey((k) => k + 1); // ← C) fuerza recrear el input y permitir recargar el mismo archivo
   };
 
   const descargarPlantilla = () => {
@@ -206,7 +191,6 @@ const CrearUsuarioMasivo = () => {
   };
 
   const payloadValido = useMemo(() => {
-    // transforma filas válidas a objetos esperados por backend
     return filas
       .map((fila, idx) => {
         const errs = erroresFila[idx] || [];
@@ -217,11 +201,9 @@ const CrearUsuarioMasivo = () => {
           (k) => (f[k.trim()] = (fila[k] ?? "").toString().trim())
         );
 
-        // rolId desde rolNombre si aplica
         let rolId = f.rolId;
-        if (!rolId && f.rolNombre) {
+        if (!rolId && f.rolNombre)
           rolId = mapaRolesPorNombre[f.rolNombre.toLowerCase()];
-        }
 
         const o = {
           identificacion: f.identificacion,
@@ -231,9 +213,7 @@ const CrearUsuarioMasivo = () => {
           rolId,
         };
 
-        if (!usarCedula && f.contraseña) {
-          o.contraseña = f.contraseña;
-        }
+        if (!usarCedula && f.contraseña) o.contraseña = f.contraseña;
         return o;
       })
       .filter(Boolean);
@@ -277,7 +257,6 @@ const CrearUsuarioMasivo = () => {
         return;
       }
 
-      // Mostrar resumen
       const c = data?.resultados?.creados?.length || 0;
       const d = data?.resultados?.duplicados?.length || 0;
       const e = data?.resultados?.errores?.length || 0;
@@ -286,7 +265,6 @@ const CrearUsuarioMasivo = () => {
         texto: `✅ Carga completada. Creados: ${c} · Duplicados: ${d} · Errores: ${e}`,
       });
 
-      // Opcional: permitir descargar reporte de errores
       setReporteErrores(buildReporteErrores(data?.resultados));
     } catch {
       setMensaje({ tipo: "error", texto: "Error de red al enviar" });
@@ -295,7 +273,6 @@ const CrearUsuarioMasivo = () => {
     }
   };
 
-  const [reporteErrores, setReporteErrores] = useState("");
   function buildReporteErrores(resultados) {
     const filasErr = (resultados?.errores || []).map((r) => ({
       identificacion: r?.usuario?.identificacion ?? "",
@@ -338,31 +315,37 @@ const CrearUsuarioMasivo = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto bg-white p-6 rounded shadow">
-      <div className="flex items-center justify-between gap-3 mb-4">
-        <h2 className="text-2xl font-bold text-[var(--color-primary)]">
+    <div className="mx-auto max-w-6xl bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-[var(--color-primary)]">
           Crear Usuario Masivo
         </h2>
-        <div className="flex gap-2">
+
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={descargarPlantilla}
-            className="flex items-center gap-2 px-3 py-2 text-sm border rounded hover:bg-gray-50"
+            className="flex items-center gap-2 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50"
             type="button"
           >
             <FileDown size={16} /> Plantilla CSV
           </button>
-          <label className="flex items-center gap-2 px-3 py-2 text-sm border rounded cursor-pointer hover:bg-gray-50">
+          <label className="flex items-center gap-2 px-3 py-2 text-sm border rounded-lg cursor-pointer hover:bg-gray-50">
             <Upload size={16} /> Cargar CSV
+            {/* A) reset en click, C) key para remount */}
             <input
+              key={uploadKey}
               type="file"
               accept=".csv,text/csv"
               className="hidden"
               onChange={onFile}
+              onClick={(e) => {
+                e.currentTarget.value = "";
+              }} // ← A) permite recargar el mismo archivo
             />
           </label>
           <button
             onClick={limpiar}
-            className="flex items-center gap-2 px-3 py-2 text-sm border rounded hover:bg-gray-50"
+            className="flex items-center gap-2 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50"
             type="button"
           >
             <Trash2 size={16} /> Limpiar
@@ -371,19 +354,21 @@ const CrearUsuarioMasivo = () => {
       </div>
 
       {archivoNombre && (
-        <p className="text-sm text-gray-600 mb-2">
-          Archivo: <span className="font-medium">{archivoNombre}</span>
+        <p className="text-xs sm:text-sm text-gray-600 mb-2">
+          Archivo:{" "}
+          <span className="font-medium break-all">{archivoNombre}</span>
         </p>
       )}
 
-      <div className="mb-4">
-        <label className="flex items-center gap-2 select-none">
+      <div className="mb-3 sm:mb-4">
+        <label className="flex items-start sm:items-center gap-2 select-none">
           <input
             type="checkbox"
             checked={usarCedula}
             onChange={() => setUsarCedula((v) => !v)}
+            className="mt-0.5 sm:mt-0"
           />
-          <span className="text-sm">
+          <span className="text-sm sm:text-base">
             Usar la cédula como contraseña inicial (se pedirá cambio en el
             primer inicio)
           </span>
@@ -391,7 +376,7 @@ const CrearUsuarioMasivo = () => {
       </div>
 
       <textarea
-        className="w-full h-40 border rounded p-2 font-mono text-sm"
+        className="w-full h-40 sm:h-56 border rounded-lg p-2 sm:p-3 font-mono text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/40"
         placeholder="Pega aquí tu CSV con encabezados: identificacion,nombre,correo,telefono,rolId,rolNombre,contraseña"
         value={textoPegado}
         onChange={(e) => consumirTexto(e.target.value)}
@@ -399,7 +384,7 @@ const CrearUsuarioMasivo = () => {
 
       {mensaje.texto && (
         <div
-          className={`mt-4 mb-2 text-sm font-medium p-2 rounded border ${
+          className={`mt-4 mb-2 text-sm font-medium p-2 rounded-lg border ${
             mensaje.tipo === "ok"
               ? "text-green-700 bg-green-50 border-green-200"
               : "text-red-700 bg-red-50 border-red-200"
@@ -409,8 +394,7 @@ const CrearUsuarioMasivo = () => {
         </div>
       )}
 
-      {/* Resumen */}
-      <div className="flex flex-wrap items-center gap-3 text-sm my-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm my-3">
         <span className="px-2 py-1 rounded bg-gray-100">
           Total: {resumen.total}
         </span>
@@ -422,56 +406,120 @@ const CrearUsuarioMasivo = () => {
         </span>
       </div>
 
-      {/* Previsualización */}
       {filas.length > 0 && (
-        <div className="overflow-auto border rounded">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-2 py-2 text-left">#</th>
-                {headers.map((h) => (
-                  <th key={h} className="px-2 py-2 text-left">
-                    {h}
-                  </th>
-                ))}
-                <th className="px-2 py-2 text-left">Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filas.map((fila, idx) => {
-                const errores = erroresFila[idx] || [];
-                const ok = errores.length === 0;
-                return (
-                  <tr key={idx} className={ok ? "" : "bg-red-50"}>
-                    <td className="px-2 py-2">{idx + 1}</td>
-                    {headers.map((h) => (
-                      <td key={h} className="px-2 py-2">
-                        {(fila[h] ?? "").toString()}
+        <>
+          {/* Cards (móvil) */}
+          <div className="sm:hidden space-y-3">
+            {filas.map((fila, idx) => {
+              const errores = erroresFila[idx] || [];
+              const ok = errores.length === 0;
+              return (
+                <div
+                  key={idx}
+                  className={`rounded-xl border p-3 shadow-sm ${
+                    ok ? "bg-white" : "bg-red-50 border-red-200"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold">#{idx + 1}</span>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded ${
+                        ok
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {ok ? "OK" : "Con errores"}
+                    </span>
+                  </div>
+                  <div className="text-xs space-y-1">
+                    <div>
+                      <span className="font-medium">Identificación:</span>{" "}
+                      {(fila.identificacion ?? "").toString()}
+                    </div>
+                    <div>
+                      <span className="font-medium">Nombre:</span>{" "}
+                      {(fila.nombre ?? "").toString()}
+                    </div>
+                    <div>
+                      <span className="font-medium">Correo:</span>{" "}
+                      {(fila.correo ?? "").toString()}
+                    </div>
+                    <div>
+                      <span className="font-medium">Teléfono:</span>{" "}
+                      {(fila.telefono ?? "").toString()}
+                    </div>
+                    {(fila.rolNombre || fila.rolId) && (
+                      <div>
+                        <span className="font-medium">Rol:</span>{" "}
+                        {(fila.rolNombre || fila.rolId || "").toString()}
+                      </div>
+                    )}
+                  </div>
+                  {!ok && (
+                    <div className="mt-2 text-xs text-red-700">
+                      ❌ {errores.join("; ")}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Tabla (≥ sm) */}
+          <div className="hidden sm:block overflow-x-auto border rounded-lg mt-2">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 sticky top-0">
+                <tr>
+                  <th className="px-3 py-2 text-left">#</th>
+                  {headers.map((h) => (
+                    <th key={h} className="px-3 py-2 text-left">
+                      {h}
+                    </th>
+                  ))}
+                  <th className="px-3 py-2 text-left">Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filas.map((fila, idx) => {
+                  const errores = erroresFila[idx] || [];
+                  const ok = errores.length === 0;
+                  return (
+                    <tr key={idx} className={ok ? "" : "bg-red-50"}>
+                      <td className="px-3 py-2">{idx + 1}</td>
+                      {headers.map((h) => (
+                        <td key={h} className="px-3 py-2">
+                          {(fila[h] ?? "").toString()}
+                        </td>
+                      ))}
+                      <td className="px-3 py-2">
+                        {ok ? (
+                          <span className="text-green-700">✅ OK</span>
+                        ) : (
+                          <span className="text-red-700">
+                            ❌ {errores.join("; ")}
+                          </span>
+                        )}
                       </td>
-                    ))}
-                    <td className="px-2 py-2">
-                      {ok ? "✅ OK" : `❌ ${errores.join("; ")}`}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
-      {/* Acciones */}
-      <div className="mt-4 flex flex-wrap gap-3 items-center">
+      <div className="mt-4 flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center">
         <button
           disabled={!puedeEnviar}
           onClick={enviar}
-          className={`flex items-center gap-2 px-4 py-2 rounded text-white transition 
+          className={`flex justify-center items-center gap-2 px-4 py-2 rounded-lg text-white transition 
             ${
               puedeEnviar
                 ? "bg-[var(--color-primary)] hover:bg-[var(--color-secondary)]"
                 : "bg-gray-400 cursor-not-allowed"
-            }
-          `}
+            }`}
         >
           {enviando && <Loader2 className="animate-spin" size={18} />}
           {enviando
@@ -482,7 +530,7 @@ const CrearUsuarioMasivo = () => {
         {reporteErrores && (
           <button
             onClick={descargarReporte}
-            className="flex items-center gap-2 px-3 py-2 text-sm border rounded hover:bg-gray-50"
+            className="flex justify-center items-center gap-2 px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
             type="button"
           >
             <FileDown size={16} /> Descargar reporte de errores
